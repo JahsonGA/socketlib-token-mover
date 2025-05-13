@@ -1,25 +1,34 @@
+/**
+ * SOCKETLIB-TOKEN-MOVER
+ * ---------------------
+ * Registers a GM-safe token move function for use by macros.
+ * Requires: SocketLib
+ */
+
 let tokenMoverSocket;
 
 Hooks.once("socketlib.ready", () => {
   // 1. Register your module with SocketLib
   tokenMoverSocket = socketlib.registerModule("socketlib-token-mover");
 
-  // 2. Register the actual function
-  tokenMoverSocket.register("moveTokenAsGM", async (tokenUuid, x, y) => {
-    const token = await fromUuid(tokenUuid);
+  // 3. Register the function by name
+  tokenMoverSocket.register("moveTokenAsGM", moveTokenAsGM);
 
-    // Error trap
+  // 4. Expose the socket on your own module for macro access
+  game.modules.get("socketlib-token-mover").tokenMoverSocket = tokenMoverSocket;
+
+  console.log("[SocketLib Token Mover] moveTokenAsGM registered and ready.");
+});
+
+// 2. Define the function (non-async as requested)
+function moveTokenAsGM(tokenUuid, x, y) {
+  fromUuid(tokenUuid).then(token => {
     if (!token) {
       console.warn(`[SocketLib Token Mover] Token not found: ${tokenUuid}`);
       return;
     }
 
     console.log(`[SocketLib Token Mover] Moving ${token.name} to (${x}, ${y})`);
-    await token.update({ x, y }, { animate: false });
+    token.update({ x, y }, { animate: false });
   });
-
-  // 3. Expose the socket for other macros to access
-  game.modules.get("socketlib-token-mover").socket = tokenMoverSocket;
-
-  console.log("[SocketLib Token Mover] Registered moveTokenAsGM and initialized.");
-});
+}
