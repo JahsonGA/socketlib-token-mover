@@ -4,7 +4,7 @@
   "description": "Registers a GM-safe token move function for spell macros.",
   "version": "1.0.0",
   "author": "JahsonGA",
-  "scripts": ["script/socketlib-token-mover.js", "script/push effect module"],
+  "scripts": ["script/socketlib-token-mover.js", "script/push effect module.js"],
   "compatibility": {
     "minimum": "10",
     "verified": "11"
