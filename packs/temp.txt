@@ -1,1 +1,121 @@
-placeholder
+/**
+ * TELEPORT TARGET (Fixed w/ Safe SocketLib Call)
+ * :white_check_mark: Select token, use crosshair with their image
+ * :white_check_mark: Uses custom SocketLib moveTokenAsGM
+ * :white_check_mark: Snaps to grid center
+ * :white_check_mark: Purple JB2A FX (requires Sequencer, Warpgate, JB2A, SocketLib)
+ */
+
+(async () => {
+  // === 0. Module requirements ===
+  if (game.paused) return ui.notifications.error(":pause_button: Game is paused.");
+  if (!game.modules.get("socketlib-token-mover")?.active) return ui.notifications.error(":x: SocketLib Token Mover module is not active.");
+  if (!game.modules.get("sequencer")?.active) return ui.notifications.error(":x: Sequencer is not active.");
+  if (!game.modules.get("warpgate")?.active) return ui.notifications.error(":x: Warpgate is not active.");
+
+  // === 1. Target token selection ===
+  const selected = Array.from(game.user.targets)[0];
+  if (!selected) return ui.notifications.warn(":dart: Please target a token to teleport.");
+  const token = canvas.tokens.get(selected.id) ?? selected;
+  const uuid = token?.document?.uuid ?? token?.uuid;
+  const icon = token.document?.texture?.src ?? "icons/svg/mystery-man.svg";
+
+  // === 2. Prompt for teleport destination ===
+  const cross = await warpgate.crosshairs.show({
+    size: 1,
+    icon,
+    label: `Teleport ${token.name}`,
+    drawIcon: true,
+    tag: "teleport-crosshair"
+  });
+
+  if (!cross || cross.cancelled || cross.x === undefined) {
+    return ui.notifications.warn(":x: No teleport destination selected.");
+  }
+
+  // === 3. Snap to grid center
+  const gridSize = canvas.grid.size;
+  const snapped = await canvas.grid.getSnappedPosition(cross.x, cross.y, 1);
+  snapped.x -= token.document.width * gridSize / 2;
+  snapped.y -= token.document.height * gridSize / 2;
+
+  // === 4. Animate + move using SocketLib as GM
+  const socket = game.modules.get("socketlib-token-mover")?.api;
+  if (!socket?.callAsGM) return ui.notifications.error(":x: SocketLib API not available or function not registered.");
+
+  new Sequence()
+    .effect()
+      .file("jb2a.misty_step.01")
+      .atLocation(token)
+      .tint("#5c2b82")
+      .scaleToObject(1.25)
+    .thenDo(async () => {
+      await Sequencer.Helpers.wait(400);
+      await socket.callAsGM("moveTokenAsGM", uuid, snapped.x, snapped.y);
+    })
+    .effect()
+      .file("jb2a.misty_step.02")
+      .atLocation({ x: snapped.x, y: snapped.y })
+      .tint("#5c2b82")
+      .scaleToObject(1.25)
+    .play();
+
+  ui.notifications.info(`✨ Teleported ${token.name}`);
+})();
+/**
+ * TELEPORT TARGET (Fixed + Awaited SocketLib Movement)
+ * :white_check_mark: Crosshair for teleport
+ * :white_check_mark: Snaps to grid
+ * :white_check_mark: Purple JB2A misty step
+ * :white_check_mark: Uses custom SocketLib moveTokenAsGM
+ */
+
+(async () => {
+  // === 0. Module requirements ===
+  if (game.paused) return ui.notifications.error(":pause_button: Game is paused.");
+  if (!game.modules.get("socketlib-token-mover")?.active) return ui.notifications.error(":x: SocketLib Token Mover module is not active.");
+  if (!game.modules.get("sequencer")?.active) return ui.notifications.error(":x: Sequencer is not active.");
+  if (!game.modules.get("warpgate")?.active) return ui.notifications.error(":x: Warpgate is not active.");
+
+  // === 1. Wait for socket to initialize ===
+  const moverModule = game.modules.get("socketlib-token-mover");
+  const socket = await (async () => {
+    while (!moverModule?.socket) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return moverModule.socket;
+  })();
+
+  if (!socket?.callAsGM) return ui.notifications.error(":x: SocketLib API not registered.");
+
+  // === 2. Select token
+  const selected = Array.from(game.user.targets)[0];
+  if (!selected) return ui.notifications.warn(":dart: Please target a token.");
+  const token = canvas.tokens.get(selected.id) ?? selected;
+  const uuid = token?.document?.uuid ?? token?.uuid;
+  const icon = token.document?.texture?.src ?? "icons/svg/mystery-man.svg";
+
+  // === 3. Crosshair selection
+  const cross = await warpgate.crosshairs.show({
+    size: 1,
+    icon,
+    label: `Teleport ${token.name}`,
+    drawIcon: true,
+    tag: "teleport-crosshair"
+  });
+
+  if (!cross || cross.cancelled || cross.x === undefined) {
+    return ui.notifications.warn(":x: No destination selected.");
+  }
+
+  // === 4. Snap to grid
+  const gridSize = canvas.grid.size;
+  const snapped = await canvas.grid.getSnappedPosition(cross.x, cross.y, 1);
+  snapped.x -= token.document.width * gridSize / 2;
+  snapped.y -= token.document.height * gridSize / 2;
+
+  // === 5. Run pre-animation
+  await new Sequence()
+    .effect()
+      .file("jb2a.misty_step.01")
+      .atLocation(tok
