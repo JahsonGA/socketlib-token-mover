@@ -17,6 +17,16 @@
       }
     ]
   },
+  "packs": [
+    {
+      "name": "teleport-effects",
+      "label": "Teleport & Push Effects",
+      "path": "packs/teleport-effects.db",
+      "type": "Macro",
+      "system": "dnd5e",
+      "private": false
+    }
+  ],
   "manifest": "",
   "download": "",
   "url": "",
