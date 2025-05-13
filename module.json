@@ -1,0 +1,24 @@
+{
+  "id": "socketlib-token-mover",
+  "title": "SocketLib Token Mover",
+  "description": "Registers a GM-safe token move function for spell macros.",
+  "version": "1.0.0",
+  "author": "JahsonGA",
+  "scripts": ["scripts/socketlib-token-mover.js"],
+  "compatibility": {
+    "minimum": "10",
+    "verified": "11"
+  },
+  "relationships": {
+    "requires": [
+      {
+        "id": "socketlib",
+        "type": "module"
+      }
+    ]
+  },
+  "manifest": "",
+  "download": "",
+  "url": "",
+  "license": "MIT"
+}
